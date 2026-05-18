@@ -4,7 +4,7 @@ import 'package:geolocator/geolocator.dart';
 
 class WeatherService {
 
-  final String apiKey = "API_KEY_CUA_BAN";
+  final String apiKey = "47edeb61b860b587e7922b709d7f6410";
 
   Future<Map<String, dynamic>> getWeather() async {
 
