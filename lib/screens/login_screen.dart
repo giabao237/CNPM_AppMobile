@@ -17,29 +17,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void login() async {
 
-    final user = await DatabaseHelper.instance.loginUser(
-      emailController.text,
-      passwordController.text,
+  final user = await DatabaseHelper.instance.loginUser(
+    emailController.text,
+    passwordController.text,
+  );
+
+  if (user != null) {
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DashboardScreen(
+          username: user['username'],
+          city: "TP.HCM",
+          temperature: 32,
+          steps: 0,
+          speed: 0,
+          highScore: 0,
+        ),
+      ),
     );
 
-    if (user != null) {
+  } else {
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => DashboardScreen(
-            username: user['username'],
-          ),
-        ),
-      );
-
-    } else {
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Sai tài khoản hoặc mật khẩu")),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Sai tài khoản hoặc mật khẩu"),
+      ),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
