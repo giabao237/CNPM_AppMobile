@@ -76,6 +76,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/player/
+    - assets/images/enemies/knight/
+    - assets/images/enemies/orc/
+    - assets/images/enemies/skeleton/
+    - assets/images/enemies/werewolf/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
