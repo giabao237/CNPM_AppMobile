@@ -13,6 +13,8 @@ class MyGame extends FlameGame {
   double spawnTimer = 0;
   final Random random = Random();
 
+  bool hasHitThisAttack = false;
+
   final List<String> enemyTypes = ["knight", "orc", "skeleton", "werewolf"];
 
   final Map<String, Map<String, int>> enemyConfigs = {
@@ -46,7 +48,7 @@ class MyGame extends FlameGame {
       joystick!.position = Vector2(120, canvasSize.y - 120);
     }
 
-    if (player != null) {
+    if (player != null && !player!.isDead) {
       player!.position = canvasSize / 2;
     }
   }
@@ -55,17 +57,17 @@ class MyGame extends FlameGame {
   void update(double dt) {
     super.update(dt);
 
-    if (player != null && joystick != null) {
+    if (player != null && joystick != null && !player!.isDead) {
       player!.move(joystick!.relativeDelta, dt);
-
       player!.autoAttack(dt);
+      playerAttackEnemies();
     }
 
     spawnEnemy(dt);
   }
 
   void spawnEnemy(double dt) {
-    if (player == null) return;
+    if (player == null || player!.isDead) return;
 
     spawnTimer += dt;
 
@@ -107,5 +109,39 @@ class MyGame extends FlameGame {
       default:
         return Vector2(size.x + 100, random.nextDouble() * size.y);
     }
+  }
+
+  void playerAttackEnemies() {
+    if (player == null) return;
+
+    if (!player!.isAttacking) {
+      hasHitThisAttack = false;
+      return;
+    }
+
+    if (hasHitThisAttack) return;
+
+    final enemies = children.whereType<Enemy>();
+
+    for (final enemy in enemies) {
+      if (enemy.isDead) continue;
+
+      final toEnemy = enemy.position - player!.position;
+      final distance = toEnemy.length;
+
+      if (distance > 110) continue;
+
+      final isFacingRight = player!.scale.x > 0;
+
+      if (isFacingRight && toEnemy.x > 0) {
+        enemy.takeDamage(player!.damage);
+      }
+
+      if (!isFacingRight && toEnemy.x < 0) {
+        enemy.takeDamage(player!.damage);
+      }
+    }
+
+    hasHitThisAttack = true;
   }
 }

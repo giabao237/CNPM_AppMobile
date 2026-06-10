@@ -1,15 +1,11 @@
+import 'dart:ui';
+
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 
 import 'player.dart';
 
-enum EnemyState {
-  idle,
-  walk,
-  attack,
-  hurt,
-  death,
-}
+enum EnemyState { idle, walk, attack, hurt, death }
 
 class Enemy extends SpriteAnimationGroupComponent<EnemyState>
     with HasGameRef<FlameGame> {
@@ -33,8 +29,15 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
   });
 
   double speed = 80;
+
+  int maxHp = 30;
   int hp = 30;
+
+  int damage = 10;
+  double attackCooldown = 0;
+
   bool isDead = false;
+  bool isHurting = false;
 
   @override
   Future<void> onLoad() async {
@@ -70,15 +73,19 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
   void update(double dt) {
     super.update(dt);
 
+    attackCooldown += dt;
+
     if (isDead) return;
+    if (isHurting) return;
 
     moveToPlayer(dt);
   }
 
   void moveToPlayer(double dt) {
     final direction = player.position - position;
+    final distance = direction.length;
 
-    if (direction.length > 50) {
+    if (distance > 60) {
       final normalizedDirection = direction.normalized();
 
       position += normalizedDirection * speed * dt;
@@ -93,22 +100,38 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
       }
     } else {
       current = EnemyState.attack;
+
+      if (attackCooldown >= 1.0) {
+        attackCooldown = 0;
+        player.takeDamage(damage);
+      }
     }
   }
 
   void takeDamage(int damage) {
-    if (isDead) return;
+    if (isDead || isHurting) return;
 
     hp -= damage;
 
     if (hp <= 0) {
+      hp = 0;
       die();
     } else {
+      isHurting = true;
       current = EnemyState.hurt;
+
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (!isDead) {
+          isHurting = false;
+          current = EnemyState.walk;
+        }
+      });
     }
   }
 
   void die() {
+    if (isDead) return;
+
     isDead = true;
     current = EnemyState.death;
 
@@ -117,10 +140,7 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
     });
   }
 
-  Future<SpriteAnimation> _loadAnimation(
-    String path,
-    int amount,
-  ) async {
+  Future<SpriteAnimation> _loadAnimation(String path, int amount) async {
     final image = await gameRef.images.load(path);
 
     return SpriteAnimation.fromFrameData(
@@ -130,6 +150,29 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
         stepTime: 0.1,
         textureSize: Vector2(100, 100),
       ),
+    );
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+
+    final barWidth = size.x;
+    const barHeight = 6.0;
+
+    final hpPercent = hp / maxHp;
+
+    final backgroundPaint = Paint()..color = const Color(0xFF444444);
+    final hpPaint = Paint()..color = const Color(0xFFFF0000);
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, -12, barWidth, barHeight),
+      backgroundPaint,
+    );
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, -12, barWidth * hpPercent, barHeight),
+      hpPaint,
     );
   }
 }
