@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 
@@ -11,14 +12,16 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
 
   double attackTimer = 0;
   bool isAttacking = false;
-  //setting hp player
+
   int maxHp = 1000;
   int hp = 1000;
-  //setting dame player
-  int damage = 100;
+
+  int damage = 50;
   bool isDead = false;
-  //die = bien mat
-  bool isDeathAnimationPlaying = false;
+
+  int level = 1;
+  int exp = 0;
+  int expToNextLevel = 5;
 
   @override
   Future<void> onLoad() async {
@@ -38,11 +41,12 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
   }
 
   void move(Vector2 direction, double dt) {
+    if (isDead) return;
+
     const speed = 200.0;
 
     position += direction * speed * dt;
 
-    // Vẫn cho đổi hướng khi đang attack
     if (direction.x < -0.1) {
       scale.x = -1;
     }
@@ -51,7 +55,6 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
       scale.x = 1;
     }
 
-    // Nếu đang attack thì không đổi animation sang walk/idle
     if (isAttacking) return;
 
     if (direction.length > 0.1) {
@@ -61,8 +64,9 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     }
   }
 
-  // chỉnh tốc độ đánh attacktimer
   void autoAttack(double dt) {
+    if (isDead) return;
+
     attackTimer += dt;
 
     if (attackTimer >= 2 && !isAttacking) {
@@ -74,43 +78,6 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
         isAttacking = false;
       });
     }
-  }
-
-  Future<SpriteAnimation> _loadAnimation(String path, int amount) async {
-    final image = await gameRef.images.load(path);
-
-    return SpriteAnimation.fromFrameData(
-      image,
-      SpriteAnimationData.sequenced(
-        amount: amount,
-        stepTime: 0.1,
-        textureSize: Vector2(100, 100),
-      ),
-    );
-  }
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-
-    final barWidth = size.x;
-    const barHeight = 8.0;
-
-    final hpPercent = hp / maxHp;
-
-    final backgroundPaint = Paint()..color = const Color(0xFF444444);
-
-    final hpPaint = Paint()..color = const Color(0xFF00FF00);
-
-    canvas.drawRect(
-      Rect.fromLTWH(0, -15, barWidth, barHeight),
-      backgroundPaint,
-    );
-
-    canvas.drawRect(
-      Rect.fromLTWH(0, -15, barWidth * hpPercent, barHeight),
-      hpPaint,
-    );
   }
 
   void takeDamage(int amount) {
@@ -130,11 +97,79 @@ class Player extends SpriteAnimationGroupComponent<PlayerState>
     if (isDead) return;
 
     isDead = true;
-    isDeathAnimationPlaying = true;
     current = PlayerState.death;
 
     Future.delayed(const Duration(milliseconds: 400), () {
       removeFromParent();
     });
+  }
+
+  void gainExp(int amount) {
+    if (isDead) return;
+
+    exp += amount;
+
+    while (exp >= expToNextLevel) {
+      exp -= expToNextLevel;
+      levelUp();
+    }
+  }
+
+  void levelUp() {
+    level++;
+
+    expToNextLevel += 5;
+
+    maxHp += 10;
+    hp = maxHp;
+
+    damage += 2;
+  }
+
+  Future<SpriteAnimation> _loadAnimation(String path, int amount) async {
+    final image = await gameRef.images.load(path);
+
+    return SpriteAnimation.fromFrameData(
+      image,
+      SpriteAnimationData.sequenced(
+        amount: amount,
+        stepTime: 0.1,
+        textureSize: Vector2(100, 100),
+      ),
+    );
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+
+    final hpPercent = hp / maxHp;
+    final expPercent = exp / expToNextLevel;
+
+    final backgroundPaint = Paint()..color = const Color(0xFF444444);
+    final hpPaint = Paint()..color = const Color(0xFF00FF00);
+    final expPaint = Paint()..color = const Color(0xFF00AAFF);
+
+    final barWidth = size.x;
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, -18, barWidth, 8),
+      backgroundPaint,
+    );
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, -18, barWidth * hpPercent, 8),
+      hpPaint,
+    );
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, -8, barWidth, 5),
+      backgroundPaint,
+    );
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, -8, barWidth * expPercent, 5),
+      expPaint,
+    );
   }
 }

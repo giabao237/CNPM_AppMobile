@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'game_screen.dart';
+import 'leaderboard_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   final String username;
@@ -21,24 +23,17 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Dashboard"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("Dashboard"), centerTitle: true),
 
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             /// Xin chào
             Text(
               "Xin chào, $username",
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 25),
@@ -59,10 +54,7 @@ class DashboardScreen extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    Text(
-                      city,
-                      style: const TextStyle(fontSize: 22),
-                    ),
+                    Text(city, style: const TextStyle(fontSize: 22)),
 
                     Text(
                       "${temperature.toStringAsFixed(1)} °C",
@@ -94,9 +86,7 @@ class DashboardScreen extends StatelessWidget {
               child: ListTile(
                 leading: const Icon(Icons.speed),
                 title: const Text("Tốc độ hiện tại"),
-                subtitle: Text(
-                  "${speed.toStringAsFixed(1)} km/h",
-                ),
+                subtitle: Text("${speed.toStringAsFixed(1)} km/h"),
               ),
             ),
 
@@ -107,9 +97,7 @@ class DashboardScreen extends StatelessWidget {
               child: ListTile(
                 leading: const Icon(Icons.emoji_events),
                 title: const Text("Mini Game"),
-                subtitle: Text(
-                  "Điểm cao nhất: $highScore",
-                ),
+                subtitle: Text("Điểm cao nhất: $highScore"),
               ),
             ),
 
@@ -119,7 +107,6 @@ class DashboardScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-
                 ElevatedButton.icon(
                   onPressed: () {},
                   icon: const Icon(Icons.home),
@@ -128,7 +115,12 @@ class DashboardScreen extends StatelessWidget {
 
                 ElevatedButton.icon(
                   onPressed: () {
-                    // mở Mini Game
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => GameScreen(username: username),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.sports_esports),
                   label: const Text("Mini Game"),
@@ -136,7 +128,12 @@ class DashboardScreen extends StatelessWidget {
 
                 ElevatedButton.icon(
                   onPressed: () {
-                    // mở Leaderboard
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const LeaderboardScreen(),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.leaderboard),
                   label: const Text("Leaderboard"),

@@ -3,7 +3,6 @@ import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
-
   static Database? _database;
 
   DatabaseHelper._init();
@@ -21,12 +20,13 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
   }
 
-  Future _createDB(Database db, int version) async {
+  Future<void> _createDB(Database db, int version) async {
     await db.execute('''
 CREATE TABLE users(
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,13 +35,37 @@ CREATE TABLE users(
   password TEXT NOT NULL
 )
 ''');
+
+    await db.execute('''
+CREATE TABLE scores(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL,
+  score INTEGER NOT NULL,
+  wave INTEGER NOT NULL,
+  created_at TEXT NOT NULL
+)
+''');
+  }
+
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+CREATE TABLE IF NOT EXISTS scores(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL,
+  score INTEGER NOT NULL,
+  wave INTEGER NOT NULL,
+  created_at TEXT NOT NULL
+)
+''');
+    }
   }
 
   Future<int> registerUser(
-      String username,
-      String email,
-      String password,
-      ) async {
+    String username,
+    String email,
+    String password,
+  ) async {
     final db = await instance.database;
 
     return await db.insert('users', {
@@ -52,9 +76,9 @@ CREATE TABLE users(
   }
 
   Future<Map<String, dynamic>?> loginUser(
-      String email,
-      String password,
-      ) async {
+    String email,
+    String password,
+  ) async {
     final db = await instance.database;
 
     final result = await db.query(
@@ -68,5 +92,30 @@ CREATE TABLE users(
     }
 
     return null;
+  }
+
+  Future<int> saveScore({
+    required String username,
+    required int score,
+    required int wave,
+  }) async {
+    final db = await instance.database;
+
+    return await db.insert('scores', {
+      'username': username,
+      'score': score,
+      'wave': wave,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getTopScores() async {
+    final db = await instance.database;
+
+    return await db.query(
+      'scores',
+      orderBy: 'score DESC',
+      limit: 10,
+    );
   }
 }

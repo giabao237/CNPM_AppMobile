@@ -1,8 +1,6 @@
 import 'dart:ui';
-
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
-
 import 'player.dart';
 
 enum EnemyState { idle, walk, attack, hurt, death }
@@ -18,6 +16,8 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
   final int hurtFrames;
   final int deathFrames;
 
+  final void Function(Vector2 position, int scoreValue) onDeath;
+
   Enemy({
     required this.player,
     required this.enemyFolder,
@@ -26,14 +26,21 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
     required this.attackFrames,
     required this.hurtFrames,
     required this.deathFrames,
+    required this.onDeath,
+    required this.maxHp,
+    required this.hp,
+    required this.damage,
+    required this.speed,
+    required this.scoreValue,
   });
 
-  double speed = 80;
+  double speed;
 
-  int maxHp = 30;
-  int hp = 30;
+  int maxHp;
+  int hp;
+  int damage;
+  int scoreValue;
 
-  int damage = 10;
   double attackCooldown = 0;
 
   bool isDead = false;
@@ -42,26 +49,11 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
   @override
   Future<void> onLoad() async {
     animations = {
-      EnemyState.idle: await _loadAnimation(
-        "enemies/$enemyFolder/idle.png",
-        idleFrames,
-      ),
-      EnemyState.walk: await _loadAnimation(
-        "enemies/$enemyFolder/walk.png",
-        walkFrames,
-      ),
-      EnemyState.attack: await _loadAnimation(
-        "enemies/$enemyFolder/attack.png",
-        attackFrames,
-      ),
-      EnemyState.hurt: await _loadAnimation(
-        "enemies/$enemyFolder/hurt.png",
-        hurtFrames,
-      ),
-      EnemyState.death: await _loadAnimation(
-        "enemies/$enemyFolder/death.png",
-        deathFrames,
-      ),
+      EnemyState.idle: await _loadAnimation("enemies/$enemyFolder/idle.png", idleFrames),
+      EnemyState.walk: await _loadAnimation("enemies/$enemyFolder/walk.png", walkFrames),
+      EnemyState.attack: await _loadAnimation("enemies/$enemyFolder/attack.png", attackFrames),
+      EnemyState.hurt: await _loadAnimation("enemies/$enemyFolder/hurt.png", hurtFrames),
+      EnemyState.death: await _loadAnimation("enemies/$enemyFolder/death.png", deathFrames),
     };
 
     current = EnemyState.walk;
@@ -91,13 +83,8 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
       position += normalizedDirection * speed * dt;
       current = EnemyState.walk;
 
-      if (normalizedDirection.x < -0.1) {
-        scale.x = -1;
-      }
-
-      if (normalizedDirection.x > 0.1) {
-        scale.x = 1;
-      }
+      if (normalizedDirection.x < -0.1) scale.x = -1;
+      if (normalizedDirection.x > 0.1) scale.x = 1;
     } else {
       current = EnemyState.attack;
 
@@ -135,6 +122,8 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
     isDead = true;
     current = EnemyState.death;
 
+    onDeath(position.clone(), scoreValue);
+
     Future.delayed(const Duration(milliseconds: 600), () {
       removeFromParent();
     });
@@ -157,22 +146,13 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
   void render(Canvas canvas) {
     super.render(canvas);
 
-    final barWidth = size.x;
-    const barHeight = 6.0;
-
     final hpPercent = hp / maxHp;
+    final barWidth = size.x;
 
-    final backgroundPaint = Paint()..color = const Color(0xFF444444);
+    final bgPaint = Paint()..color = const Color(0xFF444444);
     final hpPaint = Paint()..color = const Color(0xFFFF0000);
 
-    canvas.drawRect(
-      Rect.fromLTWH(0, -12, barWidth, barHeight),
-      backgroundPaint,
-    );
-
-    canvas.drawRect(
-      Rect.fromLTWH(0, -12, barWidth * hpPercent, barHeight),
-      hpPaint,
-    );
+    canvas.drawRect(Rect.fromLTWH(0, -12, barWidth, 6), bgPaint);
+    canvas.drawRect(Rect.fromLTWH(0, -12, barWidth * hpPercent, 6), hpPaint);
   }
 }
