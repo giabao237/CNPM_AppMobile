@@ -137,6 +137,12 @@ class MyGame extends FlameGame {
         score: score,
         wave: wave,
       );
+
+      // Dừng game và hiện overlay Game Over sau animation death
+      Future.delayed(const Duration(milliseconds: 600), () {
+        pauseEngine();
+        overlays.add('GameOver');
+      });
     }
 
     if (player != null && joystick != null && !player!.isDead) {
@@ -242,7 +248,7 @@ class MyGame extends FlameGame {
       final toEnemy = enemy.position - player!.position;
       final distance = toEnemy.length;
 
-      if (distance > 110) continue;
+      if (distance > 75) continue;
 
       final isFacingRight = player!.scale.x > 0;
 

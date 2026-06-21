@@ -77,7 +77,7 @@ class Enemy extends SpriteAnimationGroupComponent<EnemyState>
     final direction = player.position - position;
     final distance = direction.length;
 
-    if (distance > 60) {
+    if (distance > 28) {
       final normalizedDirection = direction.normalized();
 
       position += normalizedDirection * speed * dt;

@@ -48,9 +48,34 @@ class _HomeScreenState extends State<HomeScreen>
     );
     _animController.forward();
 
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    // 1. Request location permission first
+    bool locationGranted = await _speedService.requestPermission();
+
+    // 2. Request activity recognition permission sequentially after location
+    var activityStatus = await Permission.activityRecognition.status;
+    if (activityStatus.isDenied) {
+      activityStatus = await Permission.activityRecognition.request();
+    }
+    bool activityGranted = activityStatus.isGranted;
+
+    // 3. Load weather (internally checks location again, but will return immediately since it's already requested)
     _loadWeather();
-    _initSteps();
-    _initSpeed();
+
+    // 4. Initialize speed if location permission is granted
+    if (locationGranted) {
+      _initSpeedOnly();
+    }
+
+    // 5. Initialize step counter if activity recognition is granted
+    if (activityGranted) {
+      _initStepsOnly();
+    } else {
+      debugPrint("ACTIVITY_RECOGNITION permission was not granted.");
+    }
   }
 
   Future<void> _loadWeather() async {
@@ -73,20 +98,19 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  Future<void> _initSteps() async {
-    await Permission.activityRecognition.request();
+  void _initStepsOnly() {
     final stream = Pedometer.stepCountStream;
     stream.listen(
       (StepCount event) {
         if (mounted) setState(() => _steps = event.steps);
       },
-      onError: (_) {},
+      onError: (error) {
+        debugPrint("Pedometer stream error: $error");
+      },
     );
   }
 
-  Future<void> _initSpeed() async {
-    bool allowed = await _speedService.requestPermission();
-    if (!allowed) return;
+  void _initSpeedOnly() {
     _positionStream =
         _speedService.getPositionStream().listen((Position pos) {
       if (mounted) setState(() => _speed = pos.speed * 3.6);

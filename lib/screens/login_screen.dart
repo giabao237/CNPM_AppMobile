@@ -28,17 +28,11 @@ class _LoginScreenState extends State<LoginScreen>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOut,
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOutCubic,
-    ));
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+        );
     _animController.forward();
   }
 
@@ -72,9 +66,7 @@ class _LoginScreenState extends State<LoginScreen>
     } else {
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sai tài khoản hoặc mật khẩu'),
-        ),
+        const SnackBar(content: Text('Sai tài khoản hoặc mật khẩu')),
       );
     }
   }
@@ -89,8 +81,7 @@ class _LoginScreenState extends State<LoginScreen>
             position: _slideAnim,
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -129,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen>
                   // Title
                   const Center(
                     child: Text(
-                      'FitTrack',
+                      'Chào Bạn Nhé',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 32,
@@ -142,10 +133,7 @@ class _LoginScreenState extends State<LoginScreen>
                   const Center(
                     child: Text(
                       'Đăng nhập để tiếp tục',
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.white54, fontSize: 14),
                     ),
                   ),
 
@@ -167,8 +155,11 @@ class _LoginScreenState extends State<LoginScreen>
                     style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
                       hintText: 'your@email.com',
-                      prefixIcon: Icon(Icons.email_outlined,
-                          color: Colors.white38, size: 20),
+                      prefixIcon: Icon(
+                        Icons.email_outlined,
+                        color: Colors.white38,
+                        size: 20,
+                      ),
                     ),
                   ),
 
@@ -190,11 +181,13 @@ class _LoginScreenState extends State<LoginScreen>
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: '••••••••',
-                      prefixIcon: const Icon(Icons.lock_outline,
-                          color: Colors.white38, size: 20),
+                      prefixIcon: const Icon(
+                        Icons.lock_outline,
+                        color: Colors.white38,
+                        size: 20,
+                      ),
                       suffixIcon: GestureDetector(
-                        onTap: () =>
-                            setState(() => _obscure = !_obscure),
+                        onTap: () => setState(() => _obscure = !_obscure),
                         child: Icon(
                           _obscure
                               ? Icons.visibility_off_outlined
